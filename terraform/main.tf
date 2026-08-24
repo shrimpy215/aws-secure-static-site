@@ -73,6 +73,7 @@ resource "aws_cloudfront_distribution" "portfolio_site" {
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "S3Origin"
     viewer_protocol_policy = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
 
     forwarded_values {
       query_string = false
@@ -98,6 +99,37 @@ resource "aws_cloudfront_distribution" "portfolio_site" {
     ManagedBy   = "Terraform"
   }
 }
+resource "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "${var.project_name}-security-headers"
+
+  security_headers_config {
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      override                   = true
+    }
+
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    content_security_policy {
+      content_security_policy = "default-src 'self'"
+      override                = true
+    }
+
+    content_type_options {
+      override = true
+    }
+
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+  }
+}
+    
 
 data "aws_iam_policy_document" "cloudfront_oac_access" {
   statement {
