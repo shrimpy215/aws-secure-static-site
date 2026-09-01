@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Static Portfolio Website — Architecture Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface-2: #efede8;
+    --ink: #191b1e;
+    --ink-2: #4d5358;
+    --ink-3: #7b8288;
+    --rule: #e1ded7;
+    --rule-2: #cfcbc2;
+    --accent: #0c6b6b;
+    --accent-soft: #dceceb;
+    --warn: #8a5411;
+    --warn-soft: #f5e9d8;
+    --shadow: 0 1px 2px rgba(20,22,26,.05), 0 8px 24px -12px rgba(20,22,26,.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131519;
+      --surface: #1b1e23;
+      --surface-2: #23272d;
+      --ink: #e9e7e2;
+      --ink-2: #a9aeb4;
+      --ink-3: #767d85;
+      --rule: #2b3037;
+      --rule-2: #3a4048;
+      --accent: #58cfc3;
+      --accent-soft: #16302e;
+      --warn: #dda45c;
+      --warn-soft: #2d2417;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131519;
+    --surface: #1b1e23;
+    --surface-2: #23272d;
+    --ink: #e9e7e2;
+    --ink-2: #a9aeb4;
+    --ink-3: #767d85;
+    --rule: #2b3037;
+    --rule-2: #3a4048;
+    --accent: #58cfc3;
+    --accent-soft: #16302e;
+    --warn: #dda45c;
+    --warn-soft: #2d2417;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  /* ---- header ---- */
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 44px; }
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+  }
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 400; font-size: clamp(34px, 5.4vw, 50px);
+    line-height: 1.1; letter-spacing: -.01em; margin: 0 0 14px;
+  }
+  .standfirst { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 0 0 26px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 13px; color: var(--ink-3); }
+  .meta b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---- grade badge ---- */
+  .grade-row { display: flex; align-items: center; gap: 18px; margin: 0 0 26px; }
+  .grade-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 54px; height: 54px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    font-family: "Newsreader", Georgia, serif; font-size: 32px; font-weight: 400;
+    flex-shrink: 0;
+  }
+  .grade-label { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+  .grade-label strong { color: var(--ink); font-weight: 600; display: block; }
+
+  /* ---- structure ---- */
+  section { margin: 0 0 60px; }
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 400; font-size: 27px; letter-spacing: -.005em;
+    margin: 0 0 6px; line-height: 1.25;
+  }
+  .kicker {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 8px;
+  }
+  h3 { font-size: 15px; font-weight: 600; letter-spacing: -.005em; margin: 30px 0 8px; }
+  p { margin: 0 0 16px; max-width: 68ch; }
+  .lede { font-size: 17px; }
+  strong { font-weight: 600; }
+  code, .mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .875em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px; padding: .1em .35em;
+  }
+
+  /* ---- figures ---- */
+  figure {
+    margin: 30px 0 34px; padding: 22px 20px 16px;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 10px; box-shadow: var(--shadow);
+  }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+  figcaption {
+    margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--rule);
+    font-size: 13px; line-height: 1.55; color: var(--ink-3);
+  }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; margin: 22px 0 12px; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14.5px; }
+  th {
+    text-align: left; font-weight: 600; font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+    padding: 0 16px 9px 0; border-bottom: 1px solid var(--rule-2); white-space: nowrap;
+  }
+  td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); }
+  td:first-child { color: var(--ink); font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  .tech {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12.5px; color: var(--accent); white-space: nowrap;
+  }
+  .check { color: var(--accent); font-size: 15px; }
+  .cross { color: var(--warn); font-size: 15px; }
+
+  /* ---- callout ---- */
+  .note {
+    border-left: 2px solid var(--accent); background: var(--accent-soft);
+    padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;
+  }
+  .note p { margin: 0; font-size: 15px; color: var(--ink-2); max-width: none; }
+  .note p + p { margin-top: 10px; }
+  .note .lbl {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); display: block; margin-bottom: 6px;
+  }
+
+  /* ---- stages ---- */
+  ol.stages { list-style: none; padding: 0; margin: 24px 0 0; counter-reset: s; }
+  ol.stages li {
+    counter-increment: s; position: relative;
+    padding: 15px 0 15px 52px; border-bottom: 1px solid var(--rule);
+  }
+  ol.stages li:last-child { border-bottom: none; }
+  ol.stages li::before {
+    content: counter(s); position: absolute; left: 0; top: 15px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--rule-2); color: var(--ink-3);
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12.5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.stages li.done::before { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .st-title { font-weight: 600; font-size: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+  .st-body { font-size: 14px; color: var(--ink-2); margin-top: 3px; }
+  .pill {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 20px; border: 1px solid var(--accent);
+    color: var(--accent); font-weight: 500;
+  }
+
+  /* ---- cost ---- */
+  .cost { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin: 24px 0; }
+  .cost div { background: var(--surface); padding: 18px 20px; }
+  .cost .v { font-family: "Newsreader", Georgia, serif; font-size: 30px; line-height: 1.1; color: var(--ink); }
+  .cost .k { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; }
+
+  /* ---- headers grid ---- */
+  .headers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .header-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .header-card .hname {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--accent); font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .header-card .hdesc { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; margin: 0; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 22px; font-size: 13px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">AWS Portfolio · Project 1</div>
+  <h1>Secure Static Portfolio Website</h1>
+  <p class="standfirst">A private S3 bucket behind CloudFront with Origin Access Control — where the S3 bucket is never the answer to an HTTP request, and every browser gets told exactly what it's allowed to do.</p>
+  <div class="grade-row">
+    <div class="grade-badge">A</div>
+    <div class="grade-label">
+      <strong>Grade A — securityheaders.com</strong>
+      Five security headers verified in production: HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
+    </div>
+  </div>
+  <div class="meta">
+    <span><b>Repo</b> aws-secure-static-site</span>
+    <span><b>Region</b> us-east-1</span>
+    <span><b>Build time</b> 3–5 days</span>
+    <span><b>Cost</b> ~$0 total</span>
+    <span><b>IaC</b> Terraform</span>
+  </div>
+</header>
+
+<section>
+  <div class="kicker">The solution</div>
+  <h2>What you're actually building</h2>
+  <p class="lede">A static website where the S3 bucket has no public access at all — not restricted, not filtered, just off. CloudFront is the only entity on the internet that can read from it, and only because the bucket policy says so by ARN.</p>
+  <p>The site itself is deliberately simple. That's not the point. The point is the controls: every design decision has a reason grounded in threat modeling, and the README explains each one. That's what distinguishes this from a cloud lab.</p>
+
+  <figure>
+    <svg viewBox="0 0 860 220" role="img" aria-label="Request path: browser to CloudFront over HTTPS, CloudFront to S3 over SigV4-signed request using Origin Access Control. The S3 bucket has no public access and no direct route from the internet.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/>
+        </marker>
+      </defs>
+
+      <!-- Browser -->
+      <rect x="14" y="80" width="110" height="60" rx="8" fill="var(--surface-2)" stroke="var(--rule-2)" stroke-width="1.4"/>
+      <text x="69" y="107" font-size="13" text-anchor="middle" fill="var(--ink)">Browser</text>
+      <text x="69" y="126" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">any user</text>
+
+      <!-- CloudFront box -->
+      <rect x="240" y="50" width="220" height="120" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+      <text x="350" y="80" font-size="10.5" font-family="JetBrains Mono, monospace" letter-spacing="1.2" text-anchor="middle" fill="var(--accent)">CLOUDFRONT</text>
+      <rect x="260" y="90" width="180" height="34" rx="5" fill="var(--surface)" stroke="var(--rule-2)"/>
+      <text x="350" y="113" font-size="12" text-anchor="middle" fill="var(--ink)">Distribution + OAC</text>
+      <rect x="260" y="132" width="180" height="28" rx="5" fill="var(--surface)" stroke="var(--rule-2)"/>
+      <text x="350" y="151" font-size="11" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">Security headers policy</text>
+
+      <!-- S3 box -->
+      <rect x="610" y="68" width="220" height="84" rx="8" fill="var(--surface)" stroke="var(--rule-2)" stroke-width="1.4"/>
+      <text x="720" y="96" font-size="13" text-anchor="middle" fill="var(--ink)">S3 Bucket</text>
+      <text x="720" y="116" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">public access: blocked</text>
+      <text x="720" y="133" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">encryption: AES-256</text>
+
+      <!-- Blocked direct path -->
+      <line x1="124" y1="145" x2="600" y2="175" stroke="var(--rule-2)" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text x="360" y="195" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">direct access — blocked by bucket policy</text>
+
+      <!-- HTTPS arrow browser → CF -->
+      <line x1="126" y1="110" x2="232" y2="110" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#ar)"/>
+      <text x="179" y="101" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">HTTPS · redirect-to</text>
+
+      <!-- OAC arrow CF → S3 -->
+      <line x1="462" y1="110" x2="602" y2="110" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#ar)"/>
+      <text x="532" y="101" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="var(--ink-3)">SigV4 · OAC</text>
+    </svg>
+    <figcaption><b>The bucket is not the web server.</b> CloudFront terminates every request. The S3 bucket has no public access setting, no website hosting enabled, and a bucket policy that grants <code>s3:GetObject</code> to exactly one CloudFront distribution ARN — not to CloudFront in general. A request directly to the S3 endpoint returns 403.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="kicker">Security decisions</div>
+  <h2>Controls mapped to what they prevent</h2>
+  <p>Each control below was a deliberate choice. The alternative was available — public bucket, OAI instead of OAC, no headers — and was rejected for a specific reason.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Control</th><th>Implementation</th><th>What it prevents</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>S3 public access block</td>
+          <td>All four block settings enabled</td>
+          <td>Eliminates any path to accidental public exposure, even if a future bucket policy or ACL is misconfigured</td>
+        </tr>
+        <tr>
+          <td>Origin Access Control (OAC)</td>
+          <td>SigV4 signing, always — scoped to this distribution's ARN</td>
+          <td>Ensures no other CloudFront distribution, IAM principal, or anonymous request can read from the bucket</td>
+        </tr>
+        <tr>
+          <td>HTTPS enforcement</td>
+          <td><code>redirect-to-https</code> on CloudFront behavior</td>
+          <td>Eliminates plaintext HTTP traffic; prevents protocol downgrade and credential interception</td>
+        </tr>
+        <tr>
+          <td>HSTS</td>
+          <td><code>max-age=31536000; includeSubDomains</code></td>
+          <td>Instructs browsers never to attempt HTTP for one year — defeats SSL stripping even before a redirect fires</td>
+        </tr>
+        <tr>
+          <td>X-Frame-Options</td>
+          <td><code>DENY</code></td>
+          <td>Blocks the page from loading inside any iframe — prevents clickjacking overlays on third-party sites</td>
+        </tr>
+        <tr>
+          <td>Content-Security-Policy</td>
+          <td><code>default-src 'self'</code></td>
+          <td>Restricts resource loading to the same origin — prevents injected scripts from calling out to attacker infrastructure</td>
+        </tr>
+        <tr>
+          <td>X-Content-Type-Options</td>
+          <td><code>nosniff</code></td>
+          <td>Stops browsers from MIME-sniffing a response — a file declared as text cannot be executed as script</td>
+        </tr>
+        <tr>
+          <td>Referrer-Policy</td>
+          <td><code>strict-origin-when-cross-origin</code></td>
+          <td>Limits referrer data sent to third-party sites — reduces information leakage on external navigation</td>
+        </tr>
+        <tr>
+          <td>S3 server-side encryption</td>
+          <td>AES-256 (SSE-S3)</td>
+          <td>Encrypts all objects at rest — a stolen storage volume or snapshot yields ciphertext, not content</td>
+        </tr>
+        <tr>
+          <td>S3 versioning</td>
+          <td>Enabled</td>
+          <td>Retains prior object versions — supports recovery from accidental deletion or content corruption</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="lbl">OAC vs OAI</span>
+    <p>Origin Access Identity (OAI) is the legacy mechanism for CloudFront-to-S3 authentication. Origin Access Control (OAC) replaces it with SigV4 request signing and supports AWS KMS-encrypted buckets — OAI does not. Using OAC is the current AWS recommendation and the correct choice for any new deployment.</p>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">Browser-level controls</div>
+  <h2>Security headers in production</h2>
+  <p>These headers are served by CloudFront on every response via a response headers policy — no changes to the HTML are required. Verified against securityheaders.com on deployment.</p>
+
+  <div class="headers-grid">
+    <div class="header-card">
+      <div class="hname">Strict-Transport-Security</div>
+      <p class="hdesc">Forces HTTPS for one year. Browsers won't attempt an unencrypted connection even if the user types http://. Defeats SSL stripping.</p>
+    </div>
+    <div class="header-card">
+      <div class="hname">X-Frame-Options: DENY</div>
+      <p class="hdesc">Blocks the page from being embedded in any iframe on any domain. Prevents clickjacking — invisible overlays that trick users into clicking something else.</p>
+    </div>
+    <div class="header-card">
+      <div class="hname">Content-Security-Policy</div>
+      <p class="hdesc">Allows resources only from the same origin. An injected script that tries to load from an external host gets blocked before it executes.</p>
+    </div>
+    <div class="header-card">
+      <div class="hname">X-Content-Type-Options</div>
+      <p class="hdesc">Prevents MIME-type sniffing. A file served as text/plain cannot be reinterpreted as executable JavaScript by the browser.</p>
+    </div>
+    <div class="header-card">
+      <div class="hname">Referrer-Policy</div>
+      <p class="hdesc">Sends only the origin (not the full URL) on cross-origin navigation. Limits information leakage when users follow external links.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">Build sequence</div>
+  <h2>Five stages</h2>
+  <ol class="stages">
+    <li class="done">
+      <div class="st-title">S3 bucket <span class="pill">complete</span></div>
+      <div class="st-body">Private bucket with AES-256 encryption, versioning enabled, all four public-access block settings on. No website hosting. No public ACL. The bucket has no idea CloudFront exists yet.</div>
+    </li>
+    <li class="done">
+      <div class="st-title">CloudFront + OAC <span class="pill">complete</span></div>
+      <div class="st-body">Distribution with Origin Access Control using SigV4 signing. <code>redirect-to-https</code> on the default cache behavior. Default CloudFront certificate. S3 bucket policy scoped to this distribution's ARN added at the same apply.</div>
+    </li>
+    <li class="done">
+      <div class="st-title">Security headers policy <span class="pill">complete</span></div>
+      <div class="st-body">CloudFront response headers policy with HSTS, X-Frame-Options, CSP, X-Content-Type-Options, and Referrer-Policy. Attached to the default cache behavior. Verified live with securityheaders.com — Grade A.</div>
+    </li>
+    <li class="done">
+      <div class="st-title">Content upload and smoke test <span class="pill">complete</span></div>
+      <div class="st-body">index.html uploaded via AWS CLI. CloudFront URL returns a 200, all headers present in curl output. Direct S3 endpoint returns 403 — confirming the bucket policy is working as intended.</div>
+    </li>
+    <li class="done">
+      <div class="st-title">README and destroy <span class="pill">complete</span></div>
+      <div class="st-body">README with architecture overview, security design decisions table, threat model, and deployment instructions committed to GitHub. <code>terraform destroy</code> run — all resources removed, cost impact: ~$0.</div>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <div class="kicker">Economics</div>
+  <h2>What it costs to run</h2>
+  <div class="cost">
+    <div><div class="v">$0.00</div><div class="k">S3 storage, under free tier</div></div>
+    <div><div class="v">~$0</div><div class="k">realistic total for the build</div></div>
+    <div><div class="v">$0</div><div class="k">recurring, after destroy</div></div>
+  </div>
+  <p>CloudFront's free tier covers 1 TB of data transfer and 10 million requests per month. S3's free tier covers 5 GB of storage and 20,000 GET requests. A portfolio site under active development never comes close to either limit. Total AWS spend for this project: two cents, attributable to Route 53 resolver queries present in the account before the project started.</p>
+</section>
+
+<section>
+  <div class="kicker">Positioning</div>
+  <h2>What this proves</h2>
+  <p>Project 1 establishes the baseline: infrastructure as code, a working deployment, and a README that explains security decisions rather than just listing resources. The S3 + CloudFront + OAC pattern is a standard AWS architecture — what's non-standard is being able to explain, in one sentence, why OAC replaced OAI, what the bucket policy condition actually enforces, and what attack each response header mitigates.</p>
+  <p>For a Solutions Consultant screen, it demonstrates Terraform fluency and secure-by-default infrastructure habits. For a Cloud Security Architect screen, the response headers section and the OAC explanation show that browser-level controls and origin authentication are understood as a system, not a checklist.</p>
+  <div class="note">
+    <span class="lbl">The paragraph that matters</span>
+    <p>The threat model entry for OAC — "a request directly to the S3 endpoint returns 403" — is worth being able to say out loud in an interview and then explain the three-line bucket policy condition that makes it true. That's the difference between having deployed the architecture and understanding it.</p>
+  </div>
+</section>
+
+<footer>
+  AWS Solutions Architect portfolio · Project 1 of 6 · Terraform · us-east-1 · August 2026.
+</footer>
+
+</div>
+</body>
+</html>
